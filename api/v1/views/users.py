@@ -63,21 +63,22 @@ def PostUser():
 @app_views.route('/users/<user_id>', methods=['PUT'], strict_slashes=False)
 def PutUser(user_id):
     """ Updates a User, uses PUT HTTP method"""
-    exists = False
-    all_users = storage.all("User")
-    for user in all_users.values():
-        if user.id == user_id:
-            exists = True
-    if not exists:
-        abort(404)
     info = request.get_json()
+    all_users = storage.all(User)
+    pair = 'User.' + user_id
+    if all_users.get(pair) is None:
+        abort(404)
     if not info:
         abort(400, 'Not a JSON')
-    user_update = all_users['{}.{}'.format('User', user_id)]
-    user_update.name = info['name']
-    user_update.save()
-    user_update = user_update.to_dict()
-    return jsonify(user_update), 200
+    else:
+        user = all_users.get(pair)
+        for key, value in info.items():
+            if key != "id" and key != "created_at" \
+                    and key != "updated_at" and key != 'email':
+                setattr(user, key, value)
+        user.save()
+        user = user.to_dict()
+    return jsonify(user), 200
 
 
 if __name__ == '__main__':
