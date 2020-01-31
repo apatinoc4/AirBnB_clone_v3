@@ -23,7 +23,6 @@ def GetUserById(user_id):
     """Retrieves user based on its id for GET HTTP method"""
     all_users = storage.all("User")
     for user in all_users.values():
-        print(user.name, user.id)
         if user.id == user_id:
             return jsonify(user.to_dict())
     abort(404)
@@ -48,8 +47,10 @@ def PostUser():
     info = request.get_json()
     if not info:
         abort(400, 'Not a JSON')
-    elif "name" not in info:
-        abort(400, 'Missing name')
+    elif "email" not in info:
+        abort(400, 'Missing email')
+    elif "password" not in info:
+        abort(400, 'Missing password')
     user = User()
     user.name = info['name']
     user.save()
