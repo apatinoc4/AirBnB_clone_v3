@@ -22,18 +22,19 @@ def list_users():
 def GetUserById(user_id):
     """Retrieves user based on its id for GET HTTP method"""
     all_users = storage.all("User")
-    for user in all_users.values():
-        if user.id == user_id:
-            return jsonify(user.to_dict())
-    abort(404)
+    u_id = "User." + user_id
+    if all_users.get(u_id) is None:
+        abort(404)
+    user = all_users.get(u_id).to_dict()
+    return user
 
 
 @app_views.route('/users/<user_id>', methods=['DELETE'])
 def DeleteUserById(user_id):
     """Deletes an user based on its id for DELETE HTTP method"""
-    users = storage.all('User')
-    s_id = "User." + user_id
-    to_del = users.get(s_id)
+    all_users = storage.all(User)
+    u_id = "User." + user_id
+    to_del = all_users.get(u_id)
     if to_del is None:
         abort(404)
     storage.delete(to_del)
@@ -52,7 +53,8 @@ def PostUser():
     elif "password" not in info:
         abort(400, 'Missing password')
     user = User()
-    user.name = info['name']
+    user.email = info['email']
+    user.password = info['password']
     user.save()
     user = user.to_dict()
     return jsonify(user), 201
