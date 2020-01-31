@@ -1,48 +1,40 @@
 #!/usr/bin/python3
 """
-Cities file for APi project
+States file for APi project
 """
 from flask import jsonify, abort, request
 from api.v1.views import app_views
 from models import storage
-from models.city import City
+from models.user import User
 
 
-@app_views.route('/cities/<city_id>/places',
-                 methods=['GET'], strict_slashes=False)
-def show_places(city_id):
-    """This functions lists all the places from a city"""
-    list_t = []
-    cities = storage.all("City")
-    cityname = "City." + city_id
-    if cities.get(cityname) is None:
+@app_views.route('/users/', methods=['GET'], strict_slashes=False)
+def list_users():
+    """lists all users"""
+    s_list = []
+    users = storage.all("User")
+    for user in users.values():
+        s_list.append(user.to_dict())
+    return jsonify(s_list)
+
+
+@app_views.route('/users/<user_id>', methods=['GET'], strict_slashes=False)
+def GetUserById(user_id):
+    """Retrieves user based on its id for GET HTTP method"""
+    all_users = storage.all("User")
+    u_id = "User." + user_id
+    if all_users.get(u_id) is None:
         abort(404)
-    else:
-        places = storage.all("Place")
-        for place in places.values():
-            if place.city_id == city_id:
-                list_t.append(place.to_dict())
-    return jsonify(list_t)
+    user = all_users.get(u_id).to_dict()
+    return user
 
 
-@app_views.route('/places/<place_id>', methods=['GET'], strict_slashes=False)
-def get_place(place_id):
-    """This functions get a specific place by its id"""
-    places = storage.all("Place")
-    placename = "Place." + place_id
-    if places.get(placename) is None:
-        abort(404)
-    place = places.get(placename).to_dict()
-    return place
-
-
-@app_views.route('/places/<place_id>',
-                 methods=['DELETE'], strict_slashes=False)
-def delete_place(place_id):
-    """This function delete a place by its id"""
-    places = storage.all('Place')
-    placename = "Place." + place_id
-    to_del = places.get(placename)
+@app_views.route('/users/<user_id>', methods=['DELETE'])
+def DeleteUserById(user_id):
+    """Deletes an user based on its id for DELETE HTTP method"""
+    all_users = storage.all(User)
+    u_id = "User." + user_id
+    to_del = all_users.get(u_id)
     if to_del is None:
         abort(404)
     storage.delete(to_del)
@@ -50,40 +42,44 @@ def delete_place(place_id):
     return jsonify({}), 200
 
 
-@app_views.route('/cities/<city_id>/places',
-                 methods=['POST'], strict_slashes=False)
-def create_place(city_id):
-    """This function create a new place"""
+@app_views.route('/users/', methods=['POST'], strict_slashes=False)
+def PostUser():
+    """Posts a User"""
     info = request.get_json()
-    cities = storage.all("City")
-    pair = "City." + city_id
-    if cities.get(pair) is None:
-        abort(404)
     if not info:
         abort(400, 'Not a JSON')
-    elif 'name' not in info:
-        abort(400, 'Missing name')
-    place = Place()
-    place.name = info['name']
-    place.city_id = city_id
-    place.save()
-    place = place.to_dict()
-    return jsonify(place), 201
+    elif "email" not in info:
+        abort(400, 'Missing email')
+    elif "password" not in info:
+        abort(400, 'Missing password')
+    user = User()
+    user.email = info['email']
+    user.password = info['password']
+    user.save()
+    user = user.to_dict()
+    return jsonify(user), 201
 
 
-@app_views.route('/places/<place_id>', methods=['PUT'], strict_slashes=False)
-def update_place(place_id):
-    """This function update a place by id"""
+@app_views.route('/users/<user_id>', methods=['PUT'], strict_slashes=False)
+def PutUser(user_id):
+    """ Updates a User, uses PUT HTTP method"""
     info = request.get_json()
-    places = storage.all('Place')
-    pair = 'Place.' + place_id
-    if places.get(pair) is None:
+    all_users = storage.all(User)
+    pair = 'User.' + user_id
+    if all_users.get(pair) is None:
         abort(404)
     if not info:
         abort(400, 'Not a JSON')
     else:
-        place = places.get(pair)
-        place.name = info['name']
-        place.save()
-        place = place.to_dict()
-    return jsonify(place), 200
+        user = all_users.get(pair)
+        for key, value in info.items():
+            if key != "id" and key != "created_at" \
+                    and key != "updated_at" and key != 'email':
+                setattr(user, key, value)
+        user.save()
+        user = user.to_dict()
+    return jsonify(user), 200
+
+
+if __name__ == '__main__':
+    pass
