@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-States file for APi project
+Amenity file for APi project
 """
 from flask import jsonify, abort, request
 from api.v1.views import app_views
